@@ -9,23 +9,27 @@
   iframe.src = chrome.runtime.getURL('content/sidebar.html');
   document.documentElement.appendChild(iframe);
 
-  // 가상 데이터 로딩: 추후 API 연동 예정
-  const mockAds = [
-    { id: 'ad-1', title: '브랜드 A 캠페인', reward: 10, duration: '15s' },
-    { id: 'ad-2', title: '브랜드 B 캠페인', reward: 12, duration: '20s' }
-  ];
-
-  // iframe 로드 후 광고 리스트 전달
-  iframe.addEventListener('load', () => {
-    iframe.contentWindow.postMessage({ type: 'REMONE_AD_LIST', ads: mockAds, points: 0 }, '*');
-  });
-
   // 카드 클릭 -> 플레이어 페이지 오픈
   window.addEventListener('message', (event) => {
     if (event.data?.type === 'REMONE_OPEN_PLAYER' && event.data?.adId) {
       chrome.runtime.sendMessage({ type: 'REMONE_OPEN_PLAYER', adId: event.data.adId });
     }
   });
+
+  // 1초마다 포인트/큐 상태 동기화
+  const syncTimer = setInterval(async () => {
+    try {
+      const state = await chrome.storage.local.get(['currentPoints', 'adQueue']);
+      iframe.contentWindow?.postMessage({
+        type: 'REMONE_AD_LIST',
+        ads: state.adQueue ?? [],
+        points: state.currentPoints ?? 0,
+      }, '*');
+    } catch (e) {
+      console.error('[리모네] 사이드바 동기화 오류', e);
+      clearInterval(syncTimer);
+    }
+  }, 1000);
 })();
 
 // iframe 내부에서 메시지 수신해 카드 렌더링

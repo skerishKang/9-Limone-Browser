@@ -14,7 +14,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["storage", "tabs", "idle", "scripting"],
+  "permissions": ["storage", "tabs", "idle", "scripting", "alarms"],
   "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
