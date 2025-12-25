@@ -1,14 +1,20 @@
-// 포커스 기반 카운트다운 데모
-let timer = 0;
-let intervalId = null;
-
+// 광고 시청 포커스/완료 처리
+const urlParams = new URLSearchParams(window.location.search);
+const adId = urlParams.get('adId');
+const video = document.getElementById('ad-video');
 const statusEl = document.getElementById('status');
+
+let focusTime = 0;
+let intervalId = null;
+let isFocused = document.hasFocus();
 
 const startTimer = () => {
   if (intervalId) return;
   intervalId = setInterval(() => {
-    timer += 1;
-    statusEl.textContent = `포커스 ON - 시청 시간: ${timer}s`;
+    if (isFocused && !video.paused) {
+      focusTime += 1;
+      statusEl.textContent = `시청 시간: ${focusTime}초 (포커스 유지 중)`;
+    }
   }, 1000);
 };
 
@@ -16,26 +22,31 @@ const stopTimer = () => {
   if (!intervalId) return;
   clearInterval(intervalId);
   intervalId = null;
-  statusEl.textContent = `포커스 OFF - 누적 시청 시간: ${timer}s`;
+  statusEl.textContent = `포커스 OFF - 누적 시청 시간: ${focusTime}초`;
 };
 
-window.addEventListener('focus', startTimer);
-window.addEventListener('blur', stopTimer);
+window.addEventListener('focus', () => { isFocused = true; startTimer(); });
+window.addEventListener('blur', () => { isFocused = false; });
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    startTimer();
-  } else {
-    stopTimer();
-  }
+  isFocused = document.visibilityState === 'visible';
 });
 
-// 최초 포커스 상태 반영
-if (document.hasFocus()) {
-  startTimer();
+if (!adId) {
+  statusEl.textContent = '광고 ID가 없습니다.';
 } else {
-  stopTimer();
-}
+  statusEl.textContent = `광고 ${adId.slice(0, 10)} 시청 중...`;
+  startTimer();
 
-// TODO: 광고 소스 로드, 세션/토큰 검증, 완료 이벤트 송신 추가 예정
+  video.addEventListener('ended', () => {
+    statusEl.textContent = '광고 시청 완료! 포인트가 적립되었습니다.';
+    chrome.runtime.sendMessage({
+      type: 'AD_COMPLETED',
+      adId
+    }, (response) => {
+      console.log('[플레이어] 광고 완료 처리:', response);
+      setTimeout(() => window.close(), 3000);
+    });
+  });
+}
 

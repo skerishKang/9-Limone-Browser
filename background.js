@@ -81,22 +81,35 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   try {
     if (message?.type === 'REMONE_OPEN_PLAYER' && message.adId) {
-      chrome.tabs.create({ url: chrome.runtime.getURL('player/player.html') });
+      const playerUrl = chrome.runtime.getURL(`player/player.html?adId=${message.adId}`);
+      chrome.tabs.create({ url: playerUrl });
       sendResponse?.({ ok: true });
       return true;
     }
     if (message?.type === 'ACTIVITY_UPDATE') {
       const { isActive, duration } = message;
       const now = Date.now();
-      chrome.storage.local.get(['currentPoints']).then((state) => {
-        const earned = calculateRewardMs((duration ?? 0) * 1000, 2);
-        const nextPoints = (state.currentPoints ?? 0) + (isActive ? earned : 0);
+      // 포인트 적립은 알람에서만 처리하도록 상태만 저장
+      chrome.storage.local.set({
+        isActive,
+        lastActiveTime: now,
+      });
+      console.log(`[리모네] 활동 상태 업데이트: isActive=${isActive}, duration=${duration}s`);
+      sendResponse?.({ ok: true });
+      return true;
+    }
+    if (message?.type === 'AD_COMPLETED' && message.adId) {
+      chrome.storage.local.get(['adQueue', 'currentPoints']).then((state) => {
+        const adQueue = state.adQueue ?? [];
+        const completedAd = adQueue.find((ad) => ad.id === message.adId);
+        const newQueue = adQueue.filter((ad) => ad.id !== message.adId);
+        const bonus = completedAd ? ((completedAd.cpm * completedAd.duration) / 60 / 1000) : 0;
+        const nextPoints = (state.currentPoints ?? 0) + bonus;
         chrome.storage.local.set({
-          isActive,
-          lastActiveTime: now,
+          adQueue: newQueue,
           currentPoints: nextPoints,
         });
-        console.log(`[리모네] 활동 업데이트 isActive=${isActive} duration=${duration}s, 적립=${isActive ? earned.toFixed(6) : 0}`);
+        console.log(`[리모네] 광고 시청 완료: ${message.adId}, 보너스 +${bonus.toFixed(6)}, 총 ${nextPoints.toFixed(6)}`);
       });
       sendResponse?.({ ok: true });
       return true;

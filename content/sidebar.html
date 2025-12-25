@@ -45,7 +45,11 @@
           <p class="meta">리워드 ${ad.reward}P · 길이 ${ad.duration}</p>
         `;
         card.addEventListener('click', () => {
-          window.parent.postMessage({ type: 'REMONE_OPEN_PLAYER', adId: ad.id }, '*');
+          // background에 직접 요청하여 플레이어 오픈
+          chrome.runtime.sendMessage({
+            type: 'REMONE_OPEN_PLAYER',
+            adId: ad.id
+          });
         });
         listEl.appendChild(card);
       });

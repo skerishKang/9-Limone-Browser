@@ -22,8 +22,13 @@
       const state = await chrome.storage.local.get(['currentPoints', 'adQueue']);
       iframe.contentWindow?.postMessage({
         type: 'REMONE_AD_LIST',
-        ads: state.adQueue ?? [],
-        points: state.currentPoints ?? 0,
+        points: (state.currentPoints ?? 0).toFixed(6),
+        ads: (state.adQueue ?? []).map((ad) => ({
+          id: ad.id,
+          title: `광고 ${ad.id.slice(0, 8)}`,
+          reward: (((ad.cpm * ad.duration) / 60 / 1000) || 0).toFixed(4),
+          duration: `${ad.duration}초`,
+        })),
       }, '*');
     } catch (e) {
       console.error('[리모네] 사이드바 동기화 오류', e);
