@@ -1,0 +1,14 @@
+/* 사이드바 기본 스타일 */
+#remone-sidebar-frame {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  border: none;
+  z-index: 2147483647;
+  box-shadow: -4px 0 12px rgba(0,0,0,0.15);
+}
+
+/* iframe 내부 body에 적용될 안전 배경 */
+html, body { background: transparent; }

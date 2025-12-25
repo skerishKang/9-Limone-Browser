@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>리모네 사이드바</title>
+  <link rel="stylesheet" href="sidebar.css" />
+  <style>
+    body { margin: 0; font-family: 'Noto Sans KR', sans-serif; }
+    .container { height: 100vh; display: flex; flex-direction: column; background: #0f172a; color: #e2e8f0; }
+    header { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; }
+    .points { font-weight: 700; }
+    .list { flex: 1; overflow-y: auto; }
+    .card { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); cursor: pointer; }
+    .card:hover { background: rgba(255,255,255,0.06); }
+    .title { font-size: 14px; margin: 0 0 4px; }
+    .meta { font-size: 12px; color: #cbd5e1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>리모네</div>
+      <div class="points" id="points">포인트: 0</div>
+    </header>
+    <div class="list" id="ad-list"></div>
+  </div>
+  <script src="sidebar.js"></script>
+</body>
+</html>
+
+<script>
+  // iframe 내에서 postMessage 받은 광고를 렌더링
+  window.addEventListener('message', (event) => {
+    if (event.data?.type === 'REMONE_AD_LIST') {
+      const listEl = document.getElementById('ad-list');
+      const pointsEl = document.getElementById('points');
+      if (!listEl || !pointsEl) return;
+      pointsEl.textContent = `포인트: ${event.data.points ?? 0}`;
+      listEl.innerHTML = '';
+      event.data.ads?.forEach((ad) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <p class="title">${ad.title}</p>
+          <p class="meta">리워드 ${ad.reward}P · 길이 ${ad.duration}</p>
+        `;
+        card.addEventListener('click', () => {
+          window.parent.postMessage({ type: 'REMONE_OPEN_PLAYER', adId: ad.id }, '*');
+        });
+        listEl.appendChild(card);
+      });
+    }
+  });
+</script>
+

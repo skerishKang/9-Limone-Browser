@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>리모네 플레이어</title>
+  <style>
+    body { margin: 0; background: #0b1120; color: #e2e8f0; font-family: 'Noto Sans KR', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+    #status { margin-top: 12px; font-size: 14px; }
+    button { padding: 10px 16px; background: #22d3ee; border: none; border-radius: 8px; color: #0b1120; font-weight: 700; cursor: pointer; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <h1>광고 플레이어 (데모)</h1>
+  <video id="ad-video" width="720" controls autoplay>
+    <source src="" type="video/mp4">
+    지원되지 않는 브라우저입니다.
+  </video>
+  <div id="status">포커스가 활성화된 상태에서만 타이머가 진행됩니다.</div>
+  <script src="player.js"></script>
+</body>
+</html>
