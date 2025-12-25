@@ -35,6 +35,16 @@
       clearInterval(syncTimer);
     }
   }, 1000);
+
+  // iframe으로부터의 플레이어 오픈 요청을 수신해 background로 전달 (chrome API 접근 불가 대비)
+  window.addEventListener('message', (event) => {
+    if (event.source === iframe.contentWindow && event.data?.type === 'REMONE_OPEN_PLAYER' && event.data?.adId) {
+      chrome.runtime.sendMessage({
+        type: 'REMONE_OPEN_PLAYER',
+        adId: event.data.adId,
+      });
+    }
+  });
 })();
 
 // iframe 내부에서 메시지 수신해 카드 렌더링
